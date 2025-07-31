@@ -59,7 +59,7 @@ static boost::thread_specific_ptr<prima> p;
 
 constexpr auto const kODMLookAhead = 48h;
 constexpr auto const kSearchIntervalSize = 24h;
-constexpr auto const kODMDirectPeriod = 1h;
+constexpr auto const kODMDirectPeriod = 300s;
 constexpr auto const kODMDirectFactor = 1.0;
 constexpr auto const kODMOffsetMinImprovement = 60s;
 constexpr auto const kODMMaxDuration = 3600s;
@@ -176,19 +176,19 @@ n::duration_t init_direct(std::vector<direct_ride>& direct_rides,
       std::nullopt, false, intvl.from_, false, query.pedestrianProfile_,
       query.elevationCosts_, kODMMaxDuration, query.maxMatchingDistance_,
       kODMDirectFactor, api_version);
-
+  auto const step = std::chrono::duration_cast<n::unixtime_t::duration>(kODMDirectPeriod);
   if (odm_direct_duration < kODMMaxDuration) {
     if (query.arriveBy_) {
-      for (auto arr = std::chrono::floor<std::chrono::hours>(
+      for (auto arr = std::chrono::floor<n::unixtime_t::duration>(
                           intvl.to_ - odm_direct_duration) +
                       odm_direct_duration;
-           intvl.contains(arr); arr -= kODMDirectPeriod) {
+           intvl.contains(arr); arr -= step) {
         direct_rides.push_back(
             {.dep_ = arr - odm_direct_duration, .arr_ = arr});
       }
     } else {
-      for (auto dep = std::chrono::ceil<std::chrono::hours>(intvl.from_);
-           intvl.contains(dep); dep += kODMDirectPeriod) {
+      for (auto dep = std::chrono::ceil<n::unixtime_t::duration>(intvl.from_);
+           intvl.contains(dep); dep += step) {
         direct_rides.push_back(
             {.dep_ = dep, .arr_ = dep + odm_direct_duration});
       }
