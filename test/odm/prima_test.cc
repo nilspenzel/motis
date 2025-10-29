@@ -181,9 +181,9 @@ TEST(odm, prima_update) {
        .dest_ = get_special_station(special_station::kEnd)});
 
   EXPECT_FALSE(
-      p.consume_whitelist_taxis_response(invalid_response, taxi_journeys));
+      p.consume_whitelist_taxis_response(invalid_response, taxi_journeys,tt));
   EXPECT_TRUE(
-      p.consume_whitelist_taxis_response(whitelisting_response, taxi_journeys));
+      p.consume_whitelist_taxis_response(whitelisting_response, taxi_journeys,tt));
 
   auto ss = std::stringstream{};
   ss << "\n";

@@ -453,6 +453,54 @@ api::plan_response meta_router::run() {
                                                  kRideSharingTransportModeId)};
   print_time(prep_queries_start, "[prepare queries]",
              r_.metrics_->routing_execution_duration_seconds_preparing_);
+std::cout<<"arrive by "<<query_.arriveBy_<<std::endl;
+auto const& rides = p.first_mile_ride_sharing_;
+                                               auto const mode =   kRideSharingTransportModeId;
+  auto td_offsets = td_offsets_t{};
+            std::cout<<"loca 208379"<<tt_->locations_.get(nigiri::location_idx_t{208379}).pos_<<std::endl;
+            std::cout<<"loca 208377"<<tt_->locations_.get(nigiri::location_idx_t{208377}).pos_<<std::endl;
+  utl::equal_ranges_linear(
+      rides, [](auto const& a, auto const& b) { return a.stop_ == b.stop_; },
+      [&](auto&& from_it, auto&& to_it) {
+        td_offsets.emplace(from_it->stop_,
+                           std::vector<n::routing::td_offset>{});
+        for (auto const& r : n::it_range{from_it, to_it}) {
+          auto const dep = std::min(r.time_at_stop_, r.time_at_start_);
+          auto const dur = std::chrono::abs(r.time_at_stop_ - r.time_at_start_);
+          if(r.stop_ == 208379||r.stop_==208377){
+            std::cout<<"klaraxx "<<r.time_at_stop_<<" start: "<<r.time_at_start_<<"  "<<r.stop_<<std::endl;
+          }
+          if (td_offsets.at(from_it->stop_).size() > 1) {
+            auto last = rbegin(td_offsets.at(from_it->stop_));
+            auto const second_last = std::next(last);
+            if (dep ==
+                std::clamp(dep, second_last->valid_from_, last->valid_from_)) {
+              // increase validity interval of last offset
+              last->valid_from_ = dep + dur;
+              continue;
+            }
+          }
+          // add new offset
+          td_offsets.at(from_it->stop_)
+              .push_back({.valid_from_ = dep,
+                          .duration_ = dur,
+                          .transport_mode_id_ = mode});
+          td_offsets.at(from_it->stop_)
+              .push_back({.valid_from_ = dep + dur,
+                          .duration_ = n::footpath::kMaxDuration,
+                          .transport_mode_id_ = mode});
+        }
+      });
+
+
+auto it = qf.start_ride_sharing_.find(nigiri::location_idx_t{208379});
+if (it != qf.start_ride_sharing_.end()) {
+    for (auto const& aa : it->second) {
+        std::cout << "validfrom " << aa.valid_from_ <<" duration_ "<<aa.duration_<<"  " << query_.arriveBy_<< std::endl;
+    }
+} else {
+    std::cout << "Key not found\n";
+}
 
   auto const routing_start = std::chrono::steady_clock::now();
   auto sub_queries =
@@ -467,9 +515,21 @@ api::plan_response meta_router::run() {
           query_);
   auto ride_share_journeys =
       collect_odm_journeys(results, kRideSharingTransportModeId);
+      for (auto const& r : results | std::views::drop(1)) {
+    for (auto const& j : r.journeys_) {
+      if (uses_odm(j, kRideSharingTransportModeId)) {
+        if(tt_->locations_.get(j.legs_[0].to_).name_ == "Weißwasser Muskauer Straße") {
+          std::cout<<"bliblu "<<j.legs_[0].to_<<std::endl;
+        }
+      }
+    }
+  }
+
+  std::cout<<"208379 "<<tt_->locations_.get(nigiri::location_idx_t{208379}).pos_<<std::endl;
+  std::cout<<"208377 "<<tt_->locations_.get(nigiri::location_idx_t{208377}).pos_<<tt_->locations_.get(nigiri::location_idx_t{208377}).name_<<std::endl;
   p.fix_first_mile_duration(ride_share_journeys, p.first_mile_ride_sharing_,
                             p.first_mile_ride_sharing_,
-                            kRideSharingTransportModeId);
+                            kRideSharingTransportModeId,*tt_);
   p.fix_last_mile_duration(ride_share_journeys, p.last_mile_ride_sharing_,
                            p.last_mile_ride_sharing_,
                            kRideSharingTransportModeId);
