@@ -278,6 +278,50 @@ void prima::persist_whitelist_taxi_response(
   }
 }
 
+std::vector<std::vector<int64_t>> collect_requested_times(
+    std::vector<n::routing::start> const& rides,
+    which_mile wm) {
+
+  std::vector<std::vector<int64_t>> result;
+
+  utl::equal_ranges_linear(
+      rides,
+      [](auto const& a, auto const& b) { return a.stop_ == b.stop_; },
+      [&](auto&& from_it, auto&& to_it) {
+        std::vector<int64_t> times;
+
+        for (auto it = from_it; it != to_it; ++it) {
+          auto t =
+              wm == kFirstMile
+                  ? it->time_at_stop_ - kODMTransferBuffer
+                  : it->time_at_stop_ + kODMTransferBuffer;
+
+          times.push_back(
+              static_cast<int64_t>(to_millis(t)));
+        }
+
+        result.push_back(std::move(times));
+      });
+
+  return result;
+}
+
+std::vector<int64_t> collect_requested_direct_times(
+    std::vector<direct_ride> const& rides,
+    n::event_type fixed) {
+
+  std::vector<int64_t> result;
+  result.reserve(rides.size());
+
+  for (auto const& r : rides) {
+    result.push_back(static_cast<uint64_t>(
+        to_millis(fixed == n::event_type::kDep ? r.dep_ : r.arr_)));
+  }
+
+  return result;
+}
+
+
 bool prima::whitelist_taxi(std::vector<nr::journey>& taxi_journeys,
                            n::timetable const& tt) {
   auto first_mile_taxi_rides = std::vector<nr::start>{};
@@ -292,6 +336,13 @@ bool prima::whitelist_taxi(std::vector<nr::journey>& taxi_journeys,
            "[whitelist taxi] request for {} rides",
            first_mile_taxi_rides.size() + last_mile_taxi_rides.size() +
                direct_taxi_.size());
+    whitelist_requested_first_mile_times_ =
+      collect_requested_times(first_mile_taxi_rides, kFirstMile);
+    whitelist_requested_last_mile_times_ =
+      collect_requested_times(last_mile_taxi_rides, kLastMile);
+    whitelist_requested_direct_times_ =
+      collect_requested_direct_times(direct_taxi_, fixed_);
+
     boost::asio::co_spawn(
         ioc,
         [&]() -> boost::asio::awaitable<void> {

@@ -544,7 +544,7 @@ api::plan_response meta_router::run() {
               for (std::size_t i = 0; i < p.whitelist_direct_pickup_times_.size(); ++i) {
                 if (p.whitelist_direct_pickup_times_[i] == leg.startTime_ &&
                     p.whitelist_direct_dropoff_times_[i] == leg.endTime_) {
-                  return boost::json::serialize(boost::json::value_from(std::chrono::duration_cast<std::chrono::seconds>(p.whitelist_direct_pickup_times_[i].time_since_epoch()).count()));
+                  return boost::json::serialize(boost::json::value_from((p.whitelist_requested_direct_times_[i])));
                 }
               }
               return std::nullopt;
@@ -559,7 +559,7 @@ api::plan_response meta_router::run() {
                      e < p.whitelist_first_mile_pickup_times_[s].size(); ++e) {
                   if (p.whitelist_first_mile_pickup_times_[s][e] == leg.startTime_ &&
                       p.whitelist_first_mile_dropoff_times_[s][e] == leg.endTime_) {
-                    return boost::json::serialize(boost::json::value_from(std::chrono::duration_cast<std::chrono::seconds>(p.whitelist_first_mile_pickup_times_[s][e].time_since_epoch()).count()));
+                    return boost::json::serialize(boost::json::value_from((p.whitelist_requested_first_mile_times_[s][e])));
                   }
                 }
               }
@@ -575,7 +575,7 @@ api::plan_response meta_router::run() {
                      e < p.whitelist_last_mile_pickup_times_[s].size(); ++e) {
                   if (p.whitelist_last_mile_pickup_times_[s][e] == leg.startTime_ &&
                       p.whitelist_last_mile_dropoff_times_[s][e] == leg.endTime_) {
-                    return boost::json::serialize(boost::json::value_from(std::chrono::duration_cast<std::chrono::seconds>(p.whitelist_last_mile_pickup_times_[s][e].time_since_epoch()).count()));
+                    return boost::json::serialize(boost::json::value_from((p.whitelist_requested_last_mile_times_[s][e])));
                   }
                 }
               }

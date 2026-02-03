@@ -139,6 +139,10 @@ struct prima {
   std::vector<nigiri::unixtime_t> whitelist_direct_pickup_times_;
   std::vector<nigiri::unixtime_t> whitelist_direct_dropoff_times_;
 
+  std::vector<std::vector<int64_t>> whitelist_requested_first_mile_times_;
+  std::vector<std::vector<int64_t>> whitelist_requested_last_mile_times_;
+  std::vector<int64_t> whitelist_requested_direct_times_;
+
   void persist_whitelist_taxi_response(
     boost::json::object const& response);
 };
