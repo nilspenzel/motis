@@ -55,29 +55,24 @@ void prima::extract_first_and_direct_taxis_for_prima(
     std::vector<nr::journey> const& journeys) {
   whitelist_first_mile_taxi_.clear();
   whitelist_last_mile_taxi_.clear();
-  whitelist_direct_taxi_.clear();
 
   for (auto const& j : journeys) {
     if (j.legs_.empty()) continue;
 
-    bool front_is_taxi = is_odm_leg(j.legs_.front(), kOdmTransportModeId);
-    if (j.legs_.size() == 1 && front_is_taxi) {
-      whitelist_direct_taxi_.push_back(
-          {.time_at_start_ = j.legs_.front().dep_time_,
-           .time_at_stop_ = j.legs_.front().arr_time_,
-           .stop_ = j.legs_.front().to_});
-    } else if (front_is_taxi) {
+    if (j.legs_.size() == 1) {
+      continue;
+    }
+    if (is_odm_leg(j.legs_.front(), kOdmTransportModeId)) {
       whitelist_first_mile_taxi_.push_back(
           {.time_at_start_ = j.legs_.front().dep_time_,
            .time_at_stop_ = j.legs_.front().arr_time_,
            .stop_ = j.legs_.front().to_});
     }
-    if (j.legs_.size() != 1 &&
-        is_odm_leg(j.legs_.back(), kOdmTransportModeId)) {
+    if (is_odm_leg(j.legs_.back(), kOdmTransportModeId)) {
       whitelist_last_mile_taxi_.push_back(
           {.time_at_start_ = j.legs_.back().dep_time_,
            .time_at_stop_ = j.legs_.back().arr_time_,
-           .stop_ = j.legs_.back().to_});
+           .stop_ = j.legs_.back().from_});
     }
   }
   auto const order_stop = [](nigiri::routing::start s1,
@@ -90,7 +85,6 @@ void prima::extract_first_and_direct_taxis_for_prima(
   };
   utl::erase_duplicates(whitelist_first_mile_taxi_, order_stop, same_stop);
   utl::erase_duplicates(whitelist_last_mile_taxi_, order_stop, same_stop);
-  utl::erase_duplicates(whitelist_direct_taxi_, order_stop, same_stop);
 }
 
 bool prima::consume_whitelist_taxi_response(

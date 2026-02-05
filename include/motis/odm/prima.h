@@ -130,7 +130,6 @@ struct prima {
 
   std::vector<nigiri::routing::start> whitelist_first_mile_taxi_;
   std::vector<nigiri::routing::start> whitelist_last_mile_taxi_;
-  std::vector<nigiri::routing::start> whitelist_direct_taxi_;
 
   std::vector<std::vector<nigiri::unixtime_t>>
       whitelist_first_mile_pickup_times_;
